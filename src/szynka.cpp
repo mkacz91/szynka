@@ -1,8 +1,12 @@
 #include <GLFW/glfw3.h>
+#include <jogurt_math.h>
+
+using namespace jogurt;
 
 int main(int argc, char** argv)
 {
     GLFWwindow* window;
+    vec2f x = zero2f();
 
     if (!glfwInit())
         return 1;

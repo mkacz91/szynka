@@ -1,0 +1,3 @@
+[submodule "subs/math"]
+	path = subs/math
+	url = git@github.com:mkacz91/math.git

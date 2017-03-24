@@ -7,7 +7,10 @@ project(Szynka)
 find_package(OpenGL REQUIRED)
 find_package(GLFW3 REQUIRED)
 
+set(SUBS_DIR "${CMAKE_SOURCE_DIR}/subs")
+
 include_directories(
+  "${SUBS_DIR}/include"
   ${GLFW3_INCLUDE_DIR}
 )
 
