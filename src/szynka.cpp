@@ -1,5 +1,5 @@
-#include <GLFW/glfw3.h>
 #include <jogurt_math.h>
+#include "opengl.h"
 
 using namespace jogurt;
 
@@ -18,6 +18,7 @@ int main(int argc, char** argv)
         return 1;
     }
     glfwMakeContextCurrent(window);
+    gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 
     while (!glfwWindowShouldClose(window))
     {

@@ -7,10 +7,21 @@ project(Szynka)
 find_package(OpenGL REQUIRED)
 find_package(GLFW3 REQUIRED)
 
+set(SRC_DIR "${CMAKE_SOURCE_DIR}/src")
 set(SUBS_DIR "${CMAKE_SOURCE_DIR}/subs")
+
+set(GLAD_DIR "${CMAKE_BINARY_DIR}/glad")
+set(GLAD_SOURCES "${GLAD_DIR}/glad.c" "${GLAD_DIR}/glad.h")
+add_custom_command(
+  OUTPUT ${GLAD_SOURCES}
+  COMMAND python -m glad --api gl=4.0 --profile core --extensions "${SRC_DIR}/glext.txt" --generator c --no-loader --omit-khrplatform --local-files --out-path "${GLAD_DIR}"
+)
+
+add_library(glad ${GLAD_SOURCES})
 
 include_directories(
   "${SUBS_DIR}/include"
+  "${GLAD_DIR}"
   ${GLFW3_INCLUDE_DIR}
 )
 
@@ -18,6 +29,7 @@ file(GLOB SZYNKA_SOURCES src/*.cpp src/*.h)
 add_executable(szynka ${SZYNKA_SOURCES})
 target_link_libraries(szynka
   glfw3
+  glad
   ${OPENGL_gl_LIBRARY}
 )
 
