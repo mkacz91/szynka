@@ -10,6 +10,8 @@ find_package(GLFW3 REQUIRED)
 set(SRC_DIR "${CMAKE_SOURCE_DIR}/src")
 set(SUBS_DIR "${CMAKE_SOURCE_DIR}/subs")
 
+set(ASSET_CONFIG "${CMAKE_BINARY_DIR}/szynka_assets.config")
+
 set(GLAD_DIR "${CMAKE_BINARY_DIR}/glad")
 set(GLAD_SOURCES "${GLAD_DIR}/glad.c" "${GLAD_DIR}/glad.h")
 add_custom_command(
@@ -38,3 +40,5 @@ if (WIN32)
   add_custom_command(TARGET szynka POST_BUILD COMMAND
     ${CMAKE_COMMAND} -E copy_if_different "${GLFW3_DLL}" "$<TARGET_FILE_DIR:szynka>")
 endif (WIN32)
+
+file(APPEND "${ASSET_CONFIG}" "${CMAKE_SOURCE_DIR}/assets : generic")

@@ -1,5 +1,7 @@
+#include <iostream>
 #include <jogurt_math.h>
 #include "opengl.h"
+#include "assets.h"
 
 using namespace jogurt;
 
@@ -19,6 +21,9 @@ int main(int argc, char** argv)
     }
     glfwMakeContextCurrent(window);
     gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+
+    Assets::add_config("szynka_assets.config");
+    std::cout << Assets::read_all_text("hello.txt", "generic") << std::endl;
 
     while (!glfwWindowShouldClose(window))
     {
