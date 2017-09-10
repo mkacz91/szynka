@@ -44,7 +44,8 @@ private:
 template <class... Ts> inline
 string Assets::read_all_text(Ts&&... args)
 {
-    return read_all_text_(open(std::forward<Ts>(args)...));
+    auto istr = open(std::forward<Ts>(args)...);
+    return read_all_text_(istr);
 }
 
 #endif // SZYNKA_ASSETS_H
