@@ -24,7 +24,7 @@ int main(int argc, char** argv)
     gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 
     Assets::add_config("szynka_assets.config");
-    std::cout << Assets::read_all_text("hello.txt", "generic") << std::endl;
+    std::cout << Assets::read_all_text("hello.glsl") << std::endl;
 
     while (!glfwWindowShouldClose(window))
     {

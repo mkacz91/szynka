@@ -43,4 +43,6 @@ if (WIN32)
     ${CMAKE_COMMAND} -E copy_if_different "${GLFW3_DLL}" "$<TARGET_FILE_DIR:szynka>")
 endif (WIN32)
 
-file(APPEND "${ASSET_CONFIG}" "${CMAKE_SOURCE_DIR}/assets : generic")
+file(WRITE "${ASSET_CONFIG}" "")
+file(APPEND "${ASSET_CONFIG}" "${CMAKE_SOURCE_DIR}/assets : generic\n")
+file(APPEND "${ASSET_CONFIG}" "${CMAKE_SOURCE_DIR}/src/shaders : shader glsl\n")
