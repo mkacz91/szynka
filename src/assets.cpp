@@ -1,5 +1,7 @@
 #include "assets.h"
 
+namespace szynka {
+
 // For each registered hint, provides a list of asset search directories.
 std::map<string, std::vector<string>> Assets::m_directories;
 
@@ -93,3 +95,5 @@ asset_unavailable::asset_unavailable(
     runtime_error("Unable to locate or open asset '" + name + "' with hint '" + hint + "'."),
     m_name(name), m_hint(hint), m_searched_directories(searched_directories)
 { }
+
+} // namespace szynka

@@ -6,6 +6,8 @@
 #include <vector>
 #include <fstream>
 
+namespace szynka {
+
 // Manages application file assets.
 class Assets
 {
@@ -47,5 +49,7 @@ string Assets::read_all_text(Ts&&... args)
     auto istr = open(std::forward<Ts>(args)...);
     return read_all_text_(istr);
 }
+
+} // namespace szynka
 
 #endif // SZYNKA_ASSETS_H

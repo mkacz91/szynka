@@ -3,6 +3,7 @@
 #include "opengl.h"
 #include "assets.h"
 
+using namespace szynka;
 using namespace jogurt;
 
 int main(int argc, char** argv)
