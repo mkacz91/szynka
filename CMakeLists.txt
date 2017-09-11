@@ -18,7 +18,7 @@ set(GLAD_DIR "${CMAKE_BINARY_DIR}/glad")
 set(GLAD_SOURCES "${GLAD_DIR}/glad.c" "${GLAD_DIR}/glad.h")
 add_custom_command(
   OUTPUT ${GLAD_SOURCES}
-  COMMAND python -m glad --api gl=4.0 --profile core --extensions "${SRC_DIR}/glext.txt" --generator c --no-loader --omit-khrplatform --local-files --out-path "${GLAD_DIR}"
+  COMMAND python -m glad --api gl=3.2 --profile core --extensions "${SRC_DIR}/glext.txt" --generator c --no-loader --omit-khrplatform --local-files --out-path "${GLAD_DIR}"
 )
 
 add_library(glad ${GLAD_SOURCES})

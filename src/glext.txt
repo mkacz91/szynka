@@ -1,0 +1,3 @@
+GL_EXT_framebuffer_object
+GL_EXT_framebuffer_multisample
+GL_EXT_framebuffer_blit
