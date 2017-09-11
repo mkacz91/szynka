@@ -70,7 +70,7 @@ private:
 
 #define gl_error_guard(call) \
     gl_if_error (call) \
-        throw ::kletch::gl::exception(::kletch::gl::error_string(error) + " during " + #call);
+        throw ::szynka::gl::exception(::szynka::gl::error_string(error) + " during " + #call);
 
 inline void create_buffer(GLuint* buffer)
 {
