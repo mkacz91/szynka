@@ -70,7 +70,7 @@ private:
 
 #define gl_error_guard(call) \
     gl_if_error (call) \
-        throw ::szynka::gl::exception(::szynka::gl::error_string(error) + " during " + #call);
+        throw ::szynka::gl::exception(::szynka::gl::constant_string(error) + " during " + #call);
 
 inline void create_buffer(GLuint* buffer)
 {
@@ -124,7 +124,7 @@ GLint get_uniform_location(GLuint program, const char* name);
 
 GLint get_attrib_location(GLuint program, const char* name);
 
-string error_string(GLenum);
+string constant_string(GLenum);
 
 } // namespace gl
 } // namespace szynka

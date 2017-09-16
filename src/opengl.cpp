@@ -102,7 +102,7 @@ void link_program(GLuint* program, GLuint vertex_shader, GLuint fragment_shader)
         glDeleteProgram(tmp_program);
         throw exception(
             "Unable to attach shaders " + squote(shader_name(vertex_shader)) + ", " +
-            squote(shader_name(fragment_shader)) + ": "+ error_string(error)
+            squote(shader_name(fragment_shader)) + ": "+ constant_string(error)
         );
     }
 
@@ -130,7 +130,7 @@ GLint get_uniform_location(GLuint program, const char* name)
     gl_if_error (GLint location = glGetUniformLocation(program, name))
     {
         throw exception(
-            error_string(error) + "during glGetUniformLocation(" +
+            constant_string(error) + "during glGetUniformLocation(" +
             to_string(program) + ", " + quote(name) + ")"
         );
     }
@@ -149,7 +149,7 @@ GLint get_attrib_location(GLuint program, const char* name)
     gl_if_error (GLint location = glGetAttribLocation(program, name))
     {
         throw exception(
-            error_string(error) + " during glGetAttribLocation(" +
+            constant_string(error) + " during glGetAttribLocation(" +
             to_string(program) + ", " + quote(name) + ")"
         );
     }
@@ -163,18 +163,30 @@ GLint get_attrib_location(GLuint program, const char* name)
     return location;
 }
 
-string error_string(GLenum error)
+string constant_string(GLenum value)
 {
-#   define error_string_case(constant_name) case constant_name: return #constant_name
-    switch (error)
+#   define constant_string_case(constant_name) case constant_name: return #constant_name
+    switch (value)
     {
-        error_string_case(GL_NO_ERROR);
-        error_string_case(GL_INVALID_ENUM);
-        error_string_case(GL_INVALID_VALUE);
-        error_string_case(GL_INVALID_OPERATION);
-        error_string_case(GL_OUT_OF_MEMORY);
-        default: return "KLETCH_GL_UNKNOWN";
+        constant_string_case(GL_NO_ERROR);
+        constant_string_case(GL_INVALID_ENUM);
+        constant_string_case(GL_INVALID_VALUE);
+        constant_string_case(GL_INVALID_OPERATION);
+        constant_string_case(GL_OUT_OF_MEMORY);
+
+        constant_string_case(GL_FRAMEBUFFER_COMPLETE);
+        constant_string_case(GL_FRAMEBUFFER_UNDEFINED);
+        constant_string_case(GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT);
+        constant_string_case(GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT);
+        constant_string_case(GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER);
+        constant_string_case(GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER);
+        constant_string_case(GL_FRAMEBUFFER_UNSUPPORTED);
+        constant_string_case(GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE);
+        constant_string_case(GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS);
+
+        default: return "<Unknown GL constant: " + to_string(value) + ">";
     }
+#   undef constant_string_case
 }
 
 } // namespace gl
