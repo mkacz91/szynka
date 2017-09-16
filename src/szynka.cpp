@@ -34,9 +34,10 @@ int main(int argc, char** argv)
 
     Assets::add_config("szynka_assets.config");
 
-    GLuint framebuffer;
-    glGenFramebuffersEXT(1, &framebuffer);
     int framebuffer_size = 256;
+    GLuint framebuffers[2];
+    glGenFramebuffersEXT(2, framebuffers);
+    GLuint framebuffer = framebuffers[0];
     glBindFramebufferEXT(GL_FRAMEBUFFER, framebuffer);
 
     GLuint renderbuffers[2];
@@ -117,7 +118,27 @@ int main(int argc, char** argv)
     glDisable(GL_STENCIL_TEST);
     glColorMask(true, true, true, true);
 
+    GLuint textures[2];
+    glGenTextures(2, textures);
+
+    GLuint source_texture = textures[0];
+    glBindTexture(GL_TEXTURE_2D, source_texture);
+    glTexImage2D(
+        GL_TEXTURE_2D, 0, GL_RGBA, framebuffer_size, framebuffer_size, 0,
+        GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    GLuint transfer_framebuffer = framebuffers[1];
+    glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER, transfer_framebuffer);
+    glFramebufferTexture2DEXT(
+        GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, source_texture, 0);
+    glBlitFramebufferEXT(
+        0, 0, framebuffer_size, framebuffer_size,
+        0, 0, framebuffer_size, framebuffer_size,
+        GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
     glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER, 0);
+    glBindFramebufferEXT(GL_READ_FRAMEBUFFER, transfer_framebuffer);
     glViewport(0, 0, window_width, window_height);
     glClearColor(0.8f, 0.3f, 0.6f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -133,10 +154,11 @@ int main(int argc, char** argv)
         glfwPollEvents();
     }
 
+    glDeleteTextures(2, textures);
     gl::delete_buffer(&vertices);
     gl::delete_program(&fill_program);
     glDeleteRenderbuffersEXT(2, renderbuffers);
-    glDeleteFramebuffersEXT(1, &framebuffer);
+    glDeleteFramebuffersEXT(2, framebuffers);
 
     glfwTerminate();
     return 0;
