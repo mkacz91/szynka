@@ -10,5 +10,5 @@ vec2 apply_transform(vec4 transform, vec2 position) {
 
 void main ()
 {
-    gl_Position = vec4(apply_transform(transform, position), 0.0, 1.0);
+    gl_Position = vec4(2.0 * apply_transform(transform, position) - 1.0, 0.0, 1.0);
 }

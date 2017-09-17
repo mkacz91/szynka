@@ -114,7 +114,7 @@ int main(int argc, char** argv)
     glVertexAttribPointer(fill_position_attrib, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
     glEnable(GL_STENCIL_TEST);
 
-    glUniform4f(fill_transform_uniform, 1.0f, 0.0f, -1.0f, -1.0f);
+    glUniform4f(fill_transform_uniform, 0.5f, 0.0f, 0.0f, 0.0f);
     glStencilMask(0x01);
 
     glStencilOp(GL_INVERT, GL_INVERT, GL_INVERT);
@@ -127,9 +127,9 @@ int main(int argc, char** argv)
     glColorMask(true, false, false, false);
     szynka::glDrawArrays(GL_TRIANGLE_FAN, vertex_range);
 
-    glUniform4f(fill_transform_uniform, 1.0f, 1.0f,
-        (float)(-3) / (float)(2 * framebuffer_size),
-        (float)(1 - 2 * framebuffer_size) / (2 * framebuffer_size));
+    glUniform4f(fill_transform_uniform, 0.5f, 0.5f,
+        (float)(framebuffer_size - 3) / (float)(2 * framebuffer_size),
+        (float)(1) / (2 * framebuffer_size));
     glStencilMask(0x02);
     glStencilOp(GL_INVERT, GL_INVERT, GL_INVERT);
     glStencilFunc(GL_ALWAYS, 0x00, 0x02);
