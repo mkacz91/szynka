@@ -19,7 +19,7 @@ int main(int argc, char** argv)
     glfwWindowHint(GLFW_SAMPLES, 16);
 
     int window_width = 800, window_height = 600;
-    window = glfwCreateWindow(800, 600, "Szynka", nullptr, nullptr);
+    window = glfwCreateWindow(window_width, window_height, "Szynka", nullptr, nullptr);
     if (!window)
     {
         glfwTerminate();
@@ -97,6 +97,12 @@ int main(int argc, char** argv)
     GLint sdf_mask1_uniform = gl::get_uniform_location(sdf_program, "mask1");
     GLint sdf_position_attrib = gl::get_attrib_location(sdf_program, "position");
 
+    GLuint blit_program = 0;
+    gl::link_program(&blit_program, "blit_vx.glsl", "blit_fg.glsl");
+    GLint blit_rect_uniform = gl::get_uniform_location(blit_program, "rect");
+    GLint blit_texture_uniform = gl::get_uniform_location(blit_program, "texture");
+    GLint blit_uv_attrib = gl::get_attrib_location(blit_program, "uv");
+
     glClearColor(0.0, 0.0, 0.0, 0.0);
     glClear(GL_COLOR_BUFFER_BIT);
     glClearStencil(0);
@@ -167,7 +173,7 @@ int main(int argc, char** argv)
         GL_TEXTURE_2D, 0, GL_RGBA, sdf_size, sdf_size, 0,
         GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glFramebufferTexture2DEXT(
         GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, sdf_texture, 0);
     glViewport(0, 0, sdf_size, sdf_size);
@@ -184,22 +190,35 @@ int main(int argc, char** argv)
     glEnableVertexAttribArray(sdf_position_attrib);
     glVertexAttribPointer(sdf_position_attrib, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
 
-    glClearColor(0.2f, 0.5f, 0.9f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
     szynka::glDrawArrays(GL_TRIANGLE_FAN, viewport_range);
 
     glDisableVertexAttribArray(sdf_position_attrib);
 
     glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER, 0);
-    glBindFramebufferEXT(GL_READ_FRAMEBUFFER, transfer_framebuffer);
     glViewport(0, 0, window_width, window_height);
     glClearColor(0.8f, 0.3f, 0.6f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
-    glBlitFramebufferEXT(
-        0, 0, sdf_size, sdf_size,
-        10, 10, 10 + sdf_size, 10 + sdf_size,
-        GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
+    glUseProgram(blit_program);
+    glUniform1i(blit_texture_uniform, 1);
+    if (window_width > window_height)
+    {
+        glUniform4f(blit_rect_uniform,
+            -0.9 * window_height / window_width, -0.9, 0.9 * window_height / window_width, 0.9);
+    }
+    else
+    {
+        glUniform4f(blit_rect_uniform,
+            -0.9, -0.9 * window_width / window_height, 0.9, 0.9 * window_width / window_height);
+    }
+    glBindBuffer(GL_ARRAY_BUFFER, viewport_vertices);
+    glEnableVertexAttribArray(blit_uv_attrib);
+    glVertexAttribPointer(blit_uv_attrib, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    szynka::glDrawArrays(GL_TRIANGLE_FAN, viewport_range);
+
+    glDisableVertexAttribArray(blit_uv_attrib);
+    
     glfwSwapBuffers(window);
 
     while (!glfwWindowShouldClose(window))
