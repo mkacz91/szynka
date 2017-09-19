@@ -91,10 +91,14 @@ int main(int argc, char** argv)
     GLuint sdf_program = 0;
     gl::link_program(&sdf_program, "sdf_vx.glsl", "sdf_fg.glsl");
     GLint sdf_coverage_uniform = gl::get_uniform_location(sdf_program, "coverage");
-    GLint sdf_transform0_uniform = gl::get_uniform_location(sdf_program, "transform0");
-    GLint sdf_mask0_uniform = gl::get_uniform_location(sdf_program, "mask0");
-    GLint sdf_transform1_uniform = gl::get_uniform_location(sdf_program, "transform1");
-    GLint sdf_mask1_uniform = gl::get_uniform_location(sdf_program, "mask1");
+    GLint sdf_transform_n0_uniform = gl::get_uniform_location(sdf_program, "transform_n0");
+    GLint sdf_transform_n1_uniform = gl::get_uniform_location(sdf_program, "transform_n1");
+    GLint sdf_transform_r0_uniform = gl::get_uniform_location(sdf_program, "transform_r0");
+    GLint sdf_transform_r1_uniform = gl::get_uniform_location(sdf_program, "transform_r1");
+    GLint sdf_mask_n0_uniform = gl::get_uniform_location(sdf_program, "mask_n0");
+    GLint sdf_mask_n1_uniform = gl::get_uniform_location(sdf_program, "mask_n1");
+    GLint sdf_mask_r0_uniform = gl::get_uniform_location(sdf_program, "mask_r0");
+    GLint sdf_mask_r1_uniform = gl::get_uniform_location(sdf_program, "mask_r1");
     GLint sdf_position_attrib = gl::get_attrib_location(sdf_program, "position");
 
     GLuint blit_program = 0;
@@ -126,6 +130,9 @@ int main(int argc, char** argv)
     glStencilFunc(GL_EQUAL, 0x01, 0x01);
     glColorMask(true, false, false, false);
     szynka::glDrawArrays(GL_TRIANGLE_FAN, vertex_range);
+    glStencilFunc(GL_ALWAYS, 0x00, 0x01);
+    glColorMask(false, true, false, false);
+    szynka::glDrawArrays(GL_LINE_STRIP, vertex_range);
 
     glUniform4f(fill_transform_uniform, 0.5f, 0.5f,
         (float)(framebuffer_size - 3) / (float)(2 * framebuffer_size),
@@ -138,8 +145,12 @@ int main(int argc, char** argv)
 
     glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
     glStencilFunc(GL_EQUAL, 0x02, 0x02);
-    glColorMask(false, true, false, false);
+    glColorMask(false, false, true, false);
     szynka::glDrawArrays(GL_TRIANGLE_FAN, vertex_range);
+    glStencilFunc(GL_ALWAYS, 0x00, 0x02);
+    glColorMask(false, false, false, true);
+    glLineWidth(2);
+    szynka::glDrawArrays(GL_LINE_STRIP, vertex_range);
 
     glDisableVertexAttribArray(fill_position_attrib);
     glDisable(GL_STENCIL_TEST);
@@ -180,12 +191,18 @@ int main(int argc, char** argv)
 
     glUseProgram(sdf_program);
     glUniform1i(sdf_coverage_uniform, 0);
-    glUniform4f(sdf_transform0_uniform, 0.5f, 0.0f, 0.0f, 0.0f);
-    glUniform4f(sdf_mask0_uniform, 1.0f, 0.0f, 0.0f, 0.0f);
-    glUniform4f(sdf_transform1_uniform, 0.5f, 0.5f,
+    glUniform4f(sdf_transform_n0_uniform, 0.5f, 0.0f, 0.0f, 0.0f);
+    glUniform4f(sdf_transform_n1_uniform, 0.5f, 0.0f, 0.0f, 0.0f);
+    glUniform4f(sdf_transform_r0_uniform, 0.5f, 0.5f,
         (float)(framebuffer_size - 3) / (float)(2 * framebuffer_size),
         (float)(1) / (float)(2 * framebuffer_size));
-    glUniform4f(sdf_mask1_uniform, 0.0f, 1.0f, 0.0f, 0.0f);
+    glUniform4f(sdf_transform_r1_uniform, 0.5f, 0.5f,
+        (float)(framebuffer_size - 3) / (float)(2 * framebuffer_size),
+        (float)(1) / (float)(2 * framebuffer_size));
+    glUniform4f(sdf_mask_n0_uniform, 1.0f, 0.0f, 0.0f, 0.0f);
+    glUniform4f(sdf_mask_n1_uniform, 0.0f, 1.0f, 0.0f, 0.0f);
+    glUniform4f(sdf_mask_r0_uniform, 0.0f, 0.0f, 1.0f, 0.0f);
+    glUniform4f(sdf_mask_r1_uniform, 0.0f, 0.0f, 0.0f, 1.0f);
     glBindBuffer(GL_ARRAY_BUFFER, viewport_vertices);
     glEnableVertexAttribArray(sdf_position_attrib);
     glVertexAttribPointer(sdf_position_attrib, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
@@ -218,7 +235,7 @@ int main(int argc, char** argv)
     szynka::glDrawArrays(GL_TRIANGLE_FAN, viewport_range);
 
     glDisableVertexAttribArray(blit_uv_attrib);
-    
+
     glfwSwapBuffers(window);
 
     while (!glfwWindowShouldClose(window))
