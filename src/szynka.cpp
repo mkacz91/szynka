@@ -91,6 +91,7 @@ int main(int argc, char** argv)
     GLuint sdf_program = 0;
     gl::link_program(&sdf_program, "sdf_vx.glsl", "sdf_fg.glsl");
     GLint sdf_coverage_uniform = gl::get_uniform_location(sdf_program, "coverage");
+    GLint sdf_map_uniform = gl::get_uniform_location(sdf_program, "map");
     GLint sdf_transform_n0_uniform = gl::get_uniform_location(sdf_program, "transform_n0");
     GLint sdf_transform_n1_uniform = gl::get_uniform_location(sdf_program, "transform_n1");
     GLint sdf_transform_r0_uniform = gl::get_uniform_location(sdf_program, "transform_r0");
@@ -156,8 +157,8 @@ int main(int argc, char** argv)
     glDisable(GL_STENCIL_TEST);
     glColorMask(true, true, true, true);
 
-    GLuint textures[2];
-    glGenTextures(2, textures);
+    GLuint textures[3];
+    glGenTextures(3, textures);
 
     GLuint coverage_texture = textures[0];
     glActiveTexture(GL_TEXTURE0);
@@ -176,9 +177,20 @@ int main(int argc, char** argv)
         0, 0, framebuffer_size, framebuffer_size,
         GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
-    int sdf_size = framebuffer_size / 2;
-    GLuint sdf_texture = textures[1];
+    int map_size = 16;
+    GLuint map_texture = textures[1];
     glActiveTexture(GL_TEXTURE0 + 1);
+    glBindTexture(GL_TEXTURE_2D, map_texture);
+    std::vector<GLubyte> map_data(map_size * map_size, (GLubyte)128);
+    glTexImage2D(
+        GL_TEXTURE_2D, 0, GL_R8, map_size, map_size, 0,
+        GL_RED, GL_UNSIGNED_BYTE, map_data.data());
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    int sdf_size = framebuffer_size / 2;
+    GLuint sdf_texture = textures[2];
+    glActiveTexture(GL_TEXTURE0 + 2);
     glBindTexture(GL_TEXTURE_2D, sdf_texture);
     glTexImage2D(
         GL_TEXTURE_2D, 0, GL_RGBA, sdf_size, sdf_size, 0,
@@ -191,6 +203,7 @@ int main(int argc, char** argv)
 
     glUseProgram(sdf_program);
     glUniform1i(sdf_coverage_uniform, 0);
+    glUniform1i(sdf_map_uniform, 1);
     glUniform4f(sdf_transform_n0_uniform, 0.5f, 0.0f, 0.0f, 0.0f);
     glUniform4f(sdf_transform_n1_uniform, 0.5f, 0.0f, 0.0f, 0.0f);
     glUniform4f(sdf_transform_r0_uniform, 0.5f, 0.5f,
@@ -217,7 +230,7 @@ int main(int argc, char** argv)
     glClear(GL_COLOR_BUFFER_BIT);
 
     glUseProgram(blit_program);
-    glUniform1i(blit_texture_uniform, 1);
+    glUniform1i(blit_texture_uniform, 2);
     if (window_width > window_height)
     {
         glUniform4f(blit_rect_uniform,
@@ -243,7 +256,7 @@ int main(int argc, char** argv)
         glfwPollEvents();
     }
 
-    glDeleteTextures(2, textures);
+    glDeleteTextures(3, textures);
     gl::delete_buffer(&viewport_vertices);
     gl::delete_buffer(&vertices);
     gl::delete_program(&sdf_program);
