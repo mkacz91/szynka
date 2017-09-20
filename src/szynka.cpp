@@ -177,11 +177,21 @@ int main(int argc, char** argv)
         0, 0, framebuffer_size, framebuffer_size,
         GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
-    int map_size = 16;
+    auto map_in = Assets::open("map.txt", "generic");
+    int map_size;
+    map_in >> map_size;
+    std::cout << "map size: " << map_size << std::endl;
+    std::vector<GLubyte> map_data(map_size * map_size);
+    for (int i = 0; i < map_data.size(); ++i)
+    {
+        int texel;
+        map_in >> std::hex >> texel;
+        map_data[i] = (GLubyte)texel;
+    }
+
     GLuint map_texture = textures[1];
     glActiveTexture(GL_TEXTURE0 + 1);
     glBindTexture(GL_TEXTURE_2D, map_texture);
-    std::vector<GLubyte> map_data(map_size * map_size, (GLubyte)128);
     glTexImage2D(
         GL_TEXTURE_2D, 0, GL_R8, map_size, map_size, 0,
         GL_RED, GL_UNSIGNED_BYTE, map_data.data());
