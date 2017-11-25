@@ -1,12 +1,17 @@
 #include <iostream>
 #include <jogurt_math.h>
 #include <vector>
+#include <string>
+#include <iomanip>
 
 #include "opengl.h"
 #include "assets.h"
 
 using namespace szynka;
 using namespace jogurt;
+using std::string;
+
+int load_map(string const& name, std::vector<GLubyte>& map_data);
 
 int main(int argc, char** argv)
 {
@@ -68,6 +73,8 @@ int main(int argc, char** argv)
         { 0.90f, 0.70f },
         { 0.10f, 0.10f }
     };
+    for (int i = 0; i < local_vertices.size(); ++i)
+        local_vertices[i] = vec2f(0.5f, 0.5f) + (local_vertices[i] - vec2f(0.5f, 0.5f)) * 0.2f;
     int_range vertex_range(0, local_vertices.size());
     GLuint vertices = 0;
     gl::create_buffer(&vertices, local_vertices);
@@ -92,6 +99,7 @@ int main(int argc, char** argv)
     gl::link_program(&sdf_program, "sdf_vx.glsl", "sdf_fg.glsl");
     GLint sdf_coverage_uniform = gl::get_uniform_location(sdf_program, "coverage");
     GLint sdf_map_uniform = gl::get_uniform_location(sdf_program, "map");
+    GLint sdf_map_uv_adjust = gl::get_uniform_location(sdf_program, "map_uv_adjust");
     GLint sdf_transform_n0_uniform = gl::get_uniform_location(sdf_program, "transform_n0");
     GLint sdf_transform_n1_uniform = gl::get_uniform_location(sdf_program, "transform_n1");
     GLint sdf_transform_r0_uniform = gl::get_uniform_location(sdf_program, "transform_r0");
@@ -105,6 +113,7 @@ int main(int argc, char** argv)
     GLuint blit_program = 0;
     gl::link_program(&blit_program, "blit_vx.glsl", "blit_fg.glsl");
     GLint blit_rect_uniform = gl::get_uniform_location(blit_program, "rect");
+    GLint blit_uv_adjust_uniform = gl::get_uniform_location(blit_program, "uv_adjust");
     GLint blit_texture_uniform = gl::get_uniform_location(blit_program, "texture");
     GLint blit_uv_attrib = gl::get_attrib_location(blit_program, "uv");
 
@@ -180,21 +189,41 @@ int main(int argc, char** argv)
     auto map_in = Assets::open("map.txt", "generic");
     int map_size;
     map_in >> map_size;
-    std::cout << "map size: " << map_size << std::endl;
-    std::vector<GLubyte> map_data(map_size * map_size);
-    for (int i = 0; i < map_data.size(); ++i)
+    std::cout << "size: " << map_size << std::endl;
+    std::vector<GLubyte> map_data(4 * map_size * map_size);
+    std::cout << "\nFill channel:\n\n";
+    for (int i = 0; i < map_size; ++i)
     {
-        int texel;
-        map_in >> std::hex >> texel;
-        map_data[i] = (GLubyte)texel;
+        for (int j = 0; j < map_size; ++j)
+        {
+            int texel;
+            map_in >> std::hex >> texel;
+            map_data[4 * (i * map_size + j) + 0] = (GLubyte)texel;
+            std::cout << std::hex << std::setw(2) << std::setfill('0') << texel << ' ';
+        }
+        std::cout << '\n';
     }
+    std::cout << std::flush;
+    std::cout << "Border channel:\n\n";
+    for (int i = 0; i < map_size; ++i)
+    {
+        for (int j = 0; j < map_size; ++j)
+        {
+            int texel;
+            map_in >> std::hex >> texel;
+            map_data[4 * (i * map_size + j) + 1] = (GLubyte)texel;
+            std::cout << std::hex << std::setw(2) << std::setfill('0') << texel << ' ';
+        }
+        std::cout << '\n';
+    }
+    std::cout << std::flush;
 
-    GLuint map_texture = textures[1];
+    GLuint map_n_texture = textures[1];
     glActiveTexture(GL_TEXTURE0 + 1);
-    glBindTexture(GL_TEXTURE_2D, map_texture);
+    glBindTexture(GL_TEXTURE_2D, map_n_texture);
     glTexImage2D(
-        GL_TEXTURE_2D, 0, GL_R8, map_size, map_size, 0,
-        GL_RED, GL_UNSIGNED_BYTE, map_data.data());
+        GL_TEXTURE_2D, 0, GL_RGBA, map_size, map_size, 0,
+        GL_RGBA, GL_UNSIGNED_BYTE, map_data.data());
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -206,7 +235,7 @@ int main(int argc, char** argv)
         GL_TEXTURE_2D, 0, GL_RGBA, sdf_size, sdf_size, 0,
         GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glFramebufferTexture2DEXT(
         GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, sdf_texture, 0);
     glViewport(0, 0, sdf_size, sdf_size);
@@ -214,6 +243,7 @@ int main(int argc, char** argv)
     glUseProgram(sdf_program);
     glUniform1i(sdf_coverage_uniform, 0);
     glUniform1i(sdf_map_uniform, 1);
+    ::glUniform2f(sdf_map_uv_adjust, 0.5f / map_size, 1.0f - 1.0f / map_size);
     glUniform4f(sdf_transform_n0_uniform, 0.5f, 0.0f, 0.0f, 0.0f);
     glUniform4f(sdf_transform_n1_uniform, 0.5f, 0.0f, 0.0f, 0.0f);
     glUniform4f(sdf_transform_r0_uniform, 0.5f, 0.5f,
@@ -241,10 +271,12 @@ int main(int argc, char** argv)
 
     glUseProgram(blit_program);
     glUniform1i(blit_texture_uniform, 2);
+    ::glUniform2f(blit_uv_adjust_uniform, 0, 1);
+    //::glUniform2f(blit_uv_adjust_uniform, 0.5f / map_size, 1.0f - 1.0f / map_size);
     if (window_width > window_height)
     {
         glUniform4f(blit_rect_uniform,
-            -0.9 * window_height / window_width, -0.9, 0.9 * window_height / window_width, 0.9);
+            -1.9 * window_height / window_width, -1.9, 1.9 * window_height / window_width, 1.9);
     }
     else
     {
@@ -276,4 +308,27 @@ int main(int argc, char** argv)
 
     glfwTerminate();
     return 0;
+}
+
+int load_map(string const& name, std::vector<GLubyte>& map_data)
+{
+    std::cout << "Loading map '" << name << "'\n";
+    auto map_in = Assets::open(name + ".txt", "generic");
+    int map_size;
+    map_in >> map_size;
+    std::cout << "size: " << map_size << std::endl;
+    map_data.resize(map_size * map_size);
+    for (int i = 0; i < map_size; ++i)
+    {
+        for (int j = 0; j < map_size; ++j)
+        {
+            int texel;
+            map_in >> std::hex >> texel;
+            map_data[i * map_size + j] = (GLubyte)texel;
+            std::cout << std::hex << std::setw(2) << std::setfill('0') << texel << ' ';
+        }
+        std::cout << '\n';
+    }
+    std::cout << std::flush;
+    return map_size;
 }
